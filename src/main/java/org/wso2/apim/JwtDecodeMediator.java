@@ -1,16 +1,14 @@
 package org.wso2.apim;
 
-import org.apache.synapse.mediators.AbstractMediator;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.synapse.MessageContext;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.synapse.mediators.AbstractMediator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-
-import org.apache.commons.codec.binary.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Jwt Decode Mediator Implementation.
@@ -21,30 +19,6 @@ public class JwtDecodeMediator extends AbstractMediator {
 
     private String jwtHeader;
     private String accountIds;
-
-    @Override
-    public boolean mediate(MessageContext mc) {
-        accountIds = retrieveAccountId(getJWT_HEADER());
-        mc.setProperty("accountIds", accountIds);
-        log.info("--------------------ACCOUNT_IDs--------------------" + accountIds);
-        return true;
-    }
-
-    public void setJWT_HEADER(String jwtHeader){
-        this.jwtHeader = jwtHeader;
-    }
-
-    public String getJWT_HEADER(){
-        return jwtHeader;
-    }
-
-    public void setAccountIds(String accountIds){
-        this.accountIds = accountIds;
-    }
-
-    public String getAccountIds(){
-        return accountIds;
-    }
 
     private static String retrieveAccountId(String accountRequestInfo) {
         String[] split_string = accountRequestInfo.split("\\.");
@@ -59,7 +33,7 @@ public class JwtDecodeMediator extends AbstractMediator {
                 JSONArray accountRequestIdsArray = (JSONArray) accountRequestInfoJson.get("accountRequestIds");
                 String[] accountIdsArray = new String[accountRequestIdsArray.size()];
                 JSONObject accountRequestId;
-                for(int i=0;i<accountRequestIdsArray.size();i++) {
+                for (int i = 0; i < accountRequestIdsArray.size(); i++) {
                     accountRequestId = (JSONObject) accountRequestIdsArray.get(i);
                     accountIdsArray[i] = accountRequestId.get("accountId").toString();
                     accountIdsArray[i] = accountIdsArray[i].split("\\[")[1].split("\\]")[0];
@@ -74,5 +48,29 @@ public class JwtDecodeMediator extends AbstractMediator {
             log.error("Error in passing Account-Request-Information " + e.toString());
         }
         return null;
+    }
+
+    @Override
+    public boolean mediate(MessageContext mc) {
+        accountIds = retrieveAccountId(getJWT_HEADER());
+        mc.setProperty("accountIds", accountIds);
+        log.info("--------------------ACCOUNT_IDs--------------------" + accountIds);
+        return true;
+    }
+
+    public String getJWT_HEADER() {
+        return jwtHeader;
+    }
+
+    public void setJWT_HEADER(String jwtHeader) {
+        this.jwtHeader = jwtHeader;
+    }
+
+    public String getAccountIds() {
+        return accountIds;
+    }
+
+    public void setAccountIds(String accountIds) {
+        this.accountIds = accountIds;
     }
 }
