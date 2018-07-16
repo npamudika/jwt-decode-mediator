@@ -18,9 +18,9 @@ public class JwtDecodeMediator extends AbstractMediator {
     private static final Logger log = LoggerFactory.getLogger(JwtDecodeMediator.class);
 
     private String jwtHeader;
-    private JSONArray accountIds;
+    private JSONObject accountIds;
 
-    private static JSONArray retrieveAccountId(String accountRequestInfo) {
+    private static JSONObject retrieveAccountId(String accountRequestInfo) {
         String[] split_string = accountRequestInfo.split("\\.");
         String base64EncodedBody = split_string[1];
 
@@ -33,17 +33,19 @@ public class JwtDecodeMediator extends AbstractMediator {
                 JSONArray accountRequestIdsArray = (JSONArray) accountRequestInfoJson.get("accountRequestIds");
                 String[] accountIdsArray = new String[accountRequestIdsArray.size()];
                 JSONObject accountRequestId;
-                //JSONObject accountIdsJson = new JSONObject();
+                JSONObject accountIdsJson = new JSONObject();
                 JSONArray accountIds = new JSONArray();
                 for (int i = 0; i < accountRequestIdsArray.size(); i++) {
                     accountRequestId = (JSONObject) accountRequestIdsArray.get(i);
                     accountIdsArray[i] = accountRequestId.get("accountId").toString();
                     accountIdsArray[i] = accountIdsArray[i].split("\"")[1].split("\"")[0];
-                    accountIds.add(accountIdsArray[i]);
+                    JSONObject accountId = new JSONObject();
+                    accountId.put("AccountId",accountIdsArray[i]);
+                    accountIds.add(accountId);
                 }
-                //accountIdsJson.put("results", accountIdsArray);
+                accountIdsJson.put("data", accountIds);
                 //return String.join(",", accountIdsArray);
-                return accountIds;
+                return accountIdsJson;
             } else {
                 if (log.isDebugEnabled()) log.error("Account Request Ids is not available");
             }
@@ -69,11 +71,11 @@ public class JwtDecodeMediator extends AbstractMediator {
         this.jwtHeader = jwtHeader;
     }
 
-    public JSONArray getAccountIds() {
+    public JSONObject getAccountIds() {
         return accountIds;
     }
 
-    public void setAccountIds(JSONArray accountIds) {
+    public void setAccountIds(JSONObject accountIds) {
         this.accountIds = accountIds;
     }
 }
