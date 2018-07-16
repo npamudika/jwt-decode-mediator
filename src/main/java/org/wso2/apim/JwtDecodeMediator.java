@@ -18,9 +18,9 @@ public class JwtDecodeMediator extends AbstractMediator {
     private static final Logger log = LoggerFactory.getLogger(JwtDecodeMediator.class);
 
     private String jwtHeader;
-    private String accountIds;
+    private JSONArray accountIds;
 
-    private static String retrieveAccountId(String accountRequestInfo) {
+    private static JSONArray retrieveAccountId(String accountRequestInfo) {
         String[] split_string = accountRequestInfo.split("\\.");
         String base64EncodedBody = split_string[1];
 
@@ -33,13 +33,16 @@ public class JwtDecodeMediator extends AbstractMediator {
                 JSONArray accountRequestIdsArray = (JSONArray) accountRequestInfoJson.get("accountRequestIds");
                 String[] accountIdsArray = new String[accountRequestIdsArray.size()];
                 JSONObject accountRequestId;
+                //JSONObject accountIdsJson = new JSONObject();
+                JSONArray accountIds = new JSONArray();
                 for (int i = 0; i < accountRequestIdsArray.size(); i++) {
                     accountRequestId = (JSONObject) accountRequestIdsArray.get(i);
                     accountIdsArray[i] = accountRequestId.get("accountId").toString();
-                    accountIdsArray[i] = accountIdsArray[i].split("\\[")[1].split("\\]")[0];
+                    accountIdsArray[i] = accountIdsArray[i].split("\"")[1].split("\"")[0];
+                    accountIds.add(accountIdsArray[i]);
                 }
-                String accountIds;
-                accountIds = String.join(",", accountIdsArray);
+                //accountIdsJson.put("results", accountIdsArray);
+                //return String.join(",", accountIdsArray);
                 return accountIds;
             } else {
                 if (log.isDebugEnabled()) log.error("Account Request Ids is not available");
@@ -66,11 +69,11 @@ public class JwtDecodeMediator extends AbstractMediator {
         this.jwtHeader = jwtHeader;
     }
 
-    public String getAccountIds() {
+    public JSONArray getAccountIds() {
         return accountIds;
     }
 
-    public void setAccountIds(String accountIds) {
+    public void setAccountIds(JSONArray accountIds) {
         this.accountIds = accountIds;
     }
 }
