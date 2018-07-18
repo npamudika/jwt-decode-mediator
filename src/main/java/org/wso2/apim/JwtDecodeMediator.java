@@ -2,6 +2,8 @@ package org.wso2.apim;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.synapse.MessageContext;
+import org.apache.synapse.commons.json.JsonUtil;
+import org.apache.synapse.core.axis2.Axis2MessageContext;
 import org.apache.synapse.mediators.AbstractMediator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -16,11 +18,11 @@ import org.slf4j.LoggerFactory;
 public class JwtDecodeMediator extends AbstractMediator {
 
     private static final Logger log = LoggerFactory.getLogger(JwtDecodeMediator.class);
-
+    private static JSONObject accountIdsJson = new JSONObject();
     private String jwtHeader;
-    private JSONObject accountIds;
+    private String accountIds;
 
-    private static JSONObject retrieveAccountId(String accountRequestInfo) {
+    private static String retrieveAccountId(String accountRequestInfo) {
         String[] split_string = accountRequestInfo.split("\\.");
         String base64EncodedBody = split_string[1];
 
@@ -33,19 +35,18 @@ public class JwtDecodeMediator extends AbstractMediator {
                 JSONArray accountRequestIdsArray = (JSONArray) accountRequestInfoJson.get("accountRequestIds");
                 String[] accountIdsArray = new String[accountRequestIdsArray.size()];
                 JSONObject accountRequestId;
-                JSONObject accountIdsJson = new JSONObject();
                 JSONArray accountIds = new JSONArray();
                 for (int i = 0; i < accountRequestIdsArray.size(); i++) {
                     accountRequestId = (JSONObject) accountRequestIdsArray.get(i);
                     accountIdsArray[i] = accountRequestId.get("accountId").toString();
                     accountIdsArray[i] = accountIdsArray[i].split("\"")[1].split("\"")[0];
                     JSONObject accountId = new JSONObject();
-                    accountId.put("AccountId",accountIdsArray[i]);
+                    accountId.put("AccountId", accountIdsArray[i]);
                     accountIds.add(accountId);
                 }
                 accountIdsJson.put("data", accountIds);
-                //return String.join(",", accountIdsArray);
-                return accountIdsJson;
+                String transformedJson = accountIdsJson.toString();
+                return transformedJson;
             } else {
                 if (log.isDebugEnabled()) log.error("Account Request Ids is not available");
             }
@@ -56,10 +57,12 @@ public class JwtDecodeMediator extends AbstractMediator {
     }
 
     @Override
-    public boolean mediate(MessageContext mc) {
+    public boolean mediate(MessageContext context) {
         accountIds = retrieveAccountId(getJWT_HEADER());
-        mc.setProperty("accountIds", accountIds);
-        log.info("--------------------ACCOUNT_IDs--------------------" + accountIds);
+        JsonUtil.newJsonPayload(((Axis2MessageContext) context).getAxis2MessageContext(), accountIds,
+                true, true);
+        context.setProperty("accountIds", accountIdsJson);
+        log.info("--------------------ACCOUNT_IDs--------------------" + context.getProperty("accountIds").toString());
         return true;
     }
 
@@ -71,11 +74,11 @@ public class JwtDecodeMediator extends AbstractMediator {
         this.jwtHeader = jwtHeader;
     }
 
-    public JSONObject getAccountIds() {
+    public String getAccountIds() {
         return accountIds;
     }
 
-    public void setAccountIds(JSONObject accountIds) {
+    public void setAccountIds(String accountIds) {
         this.accountIds = accountIds;
     }
 }
